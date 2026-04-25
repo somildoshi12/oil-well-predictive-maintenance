@@ -33,3 +33,5 @@ training.log
 .claude/
 .claude
 .gemini
+PROGRESS.md
+CLAUDE_CODE_PLAN.md
