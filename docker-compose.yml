@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: oil_maintenance
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-oilwell123}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d oil_maintenance"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  streamlit:
+    build: .
+    ports:
+      - "8501:8501"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DB_HOST=postgres
+      - DB_PASSWORD=${DB_PASSWORD:-oilwell123}
+      - DB_NAME=oil_maintenance
+      - DB_USER=admin
+      - DB_PORT=5432
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+    command: streamlit run src/dashboard/app.py --server.address=0.0.0.0
+
+volumes:
+  pgdata:
